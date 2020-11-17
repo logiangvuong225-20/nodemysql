@@ -1,19 +1,21 @@
 const express = require("express");
 const mysql = require("mysql");
-
+const cors = require("cors");
+const bodyParser = require("body-parser");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "nodemysql",
+  database: "demo_node_mysql",
 });
 //connect
 db.connect((err) => {
   if (err) {
     throw err;
   }
-  console.log("My Sql Connected---");
+  console.log("---My Sql Connected---");
 });
+
 const app = express();
 // Create Database
 // app.get("/createdb", (req, res) => {
@@ -26,11 +28,23 @@ const app = express();
 //Creact Table
 app.get("/createpoststable", (req, res) => {
   let sql =
-    "CREATE TABLE posts(id int AUTO_INCREMENT, title VARCHAR(255), body VARCHAR(255), PRIMARY KEY(id))";
+    "CREATE TABLE posts(id int AUTO_INCREMENT, title VARCHAR(255), des VARCHAR(255), PRIMARY KEY(id))";
   db.query(sql, (err, result) => {
     if (err) throw err;
     console.log(result);
     res.send("Posts table created...");
+  });
+});
+//them item
+app.use(cors());
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.post("/insert", (req, res) => {
+  const title = req.body.title;
+  const des = req.body.des;
+  const sql = "INSERT INTO posts ( title, des) VALUES(? ,?)";
+  db.query(sql, [title, des], (err, result) => {
+    console.log(result);
   });
 });
 
@@ -73,23 +87,31 @@ app.get("/getpost/:id", (req, res) => {
   });
 });
 //Xoa 1 item
-app.get("/deletepost/:id", (req, res) => {
-  let newTitle = "Updated Title";
-  let sql = `DELETE FROM posts WHERE id = ${req.params.id}`;
-  let query = db.query(sql, (err, result) => {
-    if (err) throw err;
-    console.log(result);
-    res.send("Post deleted...");
+app.delete("/delete/:id", (req, res) => {
+  const id = req.params.id;
+  console.log("id day: " + id);
+  const sql = "DELETE FROM posts WHERE posts.id = ?";
+  db.query(sql, id, (err, result) => {
+    if (err) console.log(err);
   });
 });
 //sua 1 item
-app.get("/updatepost/:id", (req, res) => {
-  let newTitle = "Updated Title";
-  let sql = `UPDATE posts SET title = '${newTitle}' WHERE id = ${req.params.id}`;
-  let query = db.query(sql, (err, result) => {
-    if (err) throw err;
-    console.log(result);
-    res.send("Post updated...");
+// app.get("/updatepost/:id", (req, res) => {
+//   let newTitle = "Updated Title";
+//   let sql = `UPDATE posts SET title = '${newTitle}' WHERE id = ${req.params.id}`;
+//   let query = db.query(sql, (err, result) => {
+//     if (err) throw err;
+//     console.log(result);
+//     res.send("Post updated...");
+//   });
+// });
+app.put("/update/:id", (req, res) => {
+  const id = req.params.id;
+  const title = req.body.title;
+  const des = req.body.des;
+  const sql = "UPDATE posts SET title = ?, des = ? WHERE posts.id = ?";
+  db.query(sql, title, des, (err, result) => {
+    if (err) console.log(err);
   });
 });
 
